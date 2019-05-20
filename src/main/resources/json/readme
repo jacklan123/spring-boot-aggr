@@ -1,0 +1,68 @@
+
+springboot 2.0.4只支持5.X版本的Es,注意版本对应，避免坑
+
+1.mapping中tsconvert是中文的简繁体转换
+{
+  "suggest": {
+    "my-suggestion": {
+      "text": "adidas NIKtE",
+      "term": {
+        "field": "article_title.ik",//搜索的字段
+        "analyzer": "ik_smart",//搜索语句的分词器
+        "suggest_mode": "always",//missing：搜索语句的term在doc中从未出现过时，才进行推荐。popular：只推荐doc中出现频率高于输入term的词语。always：没有前面两者的限制条件。
+        "min_word_length": 1,//term最少几个字才能被推荐，默认是4个
+        "string_distance": "ngram",//计算相似性的算法，共五种
+        "sort": "frequency",//相似的term按频率排名，也可以按分数（score）排名
+        "size": 2,//每个term最多返回几个相似的term
+        "max_edits": 2//输入term和推荐的term最大距离，必须是1-2之间的数字
+      }
+    }
+  }
+}
+
+2.wildcard,fuzzy,prefix,term,range或者regexp
+
+3.自定义mapping
+{
+  "index": {
+    "analysis": {
+      "filter": {
+        "edge_ngram_filter": {
+          "type": "edge_ngram",
+          "min_gram": 1,
+          "max_gram": 50
+        },
+        "pinyin_simple_filter": {
+          "type": "pinyin",
+          "first_letter": "prefix",
+          "padding_char": " ",
+          "limit_first_letter_length": 50,
+          "lowercase": true
+        }
+      },
+      "char_filter": {
+        "tsconvert": {
+          "type": "stconvert",
+          "convert_type": "t2s"
+        }
+      },
+      "analyzer": {
+        "ikSearchAnalyzer": {
+          "type": "custom",
+          "tokenizer": "ik_max_word",
+          "char_filter": [
+            "tsconvert"
+          ]
+        },
+        "pinyinSimpleIndexAnalyzer": {
+          "tokenizer": "keyword",
+          "filter": [
+            "pinyin_simple_filter",
+            "edge_ngram_filter",
+            "lowercase"
+          ]
+        }
+      }
+    }
+  }
+}

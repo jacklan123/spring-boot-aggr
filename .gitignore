@@ -1,0 +1,17 @@
+#common files and directories
+/target/
+/logs/
+/classes/
+/deploy/
+
+#ignore eclipse files
+.settings/
+.classpath
+.project
+.DS_Store
+
+#ignore idea files
+.idea
+*.iml
+.eml
+.log
