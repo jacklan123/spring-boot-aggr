@@ -8,6 +8,9 @@ import org.springframework.data.redis.core.*;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 /**
+ *
+ * StringRedisTemplate 在jar包中已经创建
+ *
  * @version 1.0
  * @date 2019-05-13 14:55
  */
