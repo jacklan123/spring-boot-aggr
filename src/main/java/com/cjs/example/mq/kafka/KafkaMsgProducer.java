@@ -19,53 +19,44 @@ import java.util.concurrent.ExecutionException;
 public class KafkaMsgProducer {
 
 
-    private Map<String, Object> producerConfig;
-
-    private String topic;
-
-    private Producer<String, String> producer;
+    public static void main(String[] args) {
 
 
+        Properties props = new Properties();
 
-    public KafkaMsgProducer(Map<String, Object> producerConfigs, String topic){
-        this.topic = topic;
-        this.producerConfig = producerConfig;
-        this.producer = new KafkaProducer<String, String>(producerConfig);
-    }
+        props.put("bootstrap.servers", "hadoop102:9092");//kafka 集 群，broker-list
 
+        props.put("acks", "all");
+        //重试次数
+        props.put("retries", 1);
+        //批次大小
+        props.put("batch.size", 16384);
+        //等待时间
+        props.put("linger.ms", 1);
 
-    public void doTask(String[] args) {
+        props.put("buffer.memory", 33554432);//RecordAccumulator 缓 冲区大小
+
+        props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+
+        Producer<String, String> producer = new KafkaProducer<>(props);
 
         for (int i = 0; i < 100; i++) {
-            producer.send(new ProducerRecord<String, String>(topic, "produce message " + i, Integer.toString(i)), new Callback() {
+            producer.send(new ProducerRecord<String, String>("first", Integer.toString(i), Integer.toString(i)), new Callback() {
+
+                //回调函数，该方法会在 Producer 收到 ack 时调用，为异步调用
                 @Override
                 public void onCompletion(RecordMetadata metadata, Exception exception) {
-
+                    if (exception == null) {
+                        System.out.println("success->" + metadata.offset());
+                    } else {
+                        exception.printStackTrace();
+                    }
                 }
             });
         }
-
+        producer.close();
     }
-
-
-    public void createTopic() {
-        //创建topic
-        Properties props = new Properties();
-        props.put("bootstrap.servers", "192.168.180.128:9092");
-        AdminClient adminClient = AdminClient.create(props);
-
-        List<NewTopic> topics = new ArrayList<NewTopic>();
-        NewTopic newTopic = new NewTopic("topic-test", 1, (short) 1);
-        topics.add(newTopic);
-        CreateTopicsResult result = adminClient.createTopics(topics);
-        try {
-            result.all().get();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        }
-    }
-
-
 }
+
+
